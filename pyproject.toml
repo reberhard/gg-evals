@@ -1,0 +1,40 @@
+[project]
+name = "gg-evals"
+version = "0.1.0-pre"
+description = "GuardBench: public benchmark for AI-agent verification stacks"
+authors = [{ name = "Ryan Eberhard" }]
+license = { text = "MIT" }
+readme = "README.md"
+requires-python = ">=3.11"
+
+dependencies = [
+    # Intentionally minimal. Add deps per-eval as needed; pin all of them.
+    "pydantic>=2.6.0",
+    "click>=8.1.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-cov>=5.0.0",
+    "ruff>=0.4.0",
+    "mypy>=1.10.0",
+]
+
+[project.scripts]
+guardbench = "eval.cli:main"
+
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["eval*", "classifiers*"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.pytest.ini_options]
+testpaths = ["test"]
+python_files = ["test_*.py", "*_test.py"]
