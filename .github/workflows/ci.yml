@@ -33,3 +33,7 @@ jobs:
       - name: Smoke eval
         run: |
           guardbench run --tier smoke
+
+      - name: Published report thresholds
+        run: |
+          python scripts/report_summary.py --check --min-precision 0.8 --min-recall 0.4
