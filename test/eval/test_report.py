@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import date
 
 from eval.shared.report import write_report
-from eval.shared.scoring import ScoreResult
+from eval.shared.scoring import ErrorNote, ScoreResult
 
 
 def test_write_report_includes_metrics_and_clusters(tmp_path) -> None:
@@ -14,6 +14,17 @@ def test_write_report_includes_metrics_and_clusters(tmp_path) -> None:
         tn=1,
         fn=0,
         clusters={"claim": ScoreResult(n=2, tp=1, fp=0, tn=1, fn=0)},
+        error_notes=[
+            ErrorNote(
+                fixture_id="row-1",
+                kind="fn",
+                cluster="claim",
+                expected_label="fn",
+                predicted_label="negative",
+                reason="no-trigger",
+                rationale="Unsourced claim should be flagged.",
+            )
+        ],
     )
 
     path = write_report(
@@ -30,3 +41,5 @@ def test_write_report_includes_metrics_and_clusters(tmp_path) -> None:
     body = path.read_text()
     assert "| precision | 1.000 |" in body
     assert "| claim | 2 | 1.000 | 1.000 | 1.000 | 1 | 0 | 1 | 0 |" in body
+    assert "## Error Notes" in body
+    assert "| row-1 | fn | claim | fn | negative | no-trigger | Unsourced claim should be flagged. |" in body

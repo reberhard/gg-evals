@@ -11,6 +11,19 @@ from dataclasses import dataclass, field
 from typing import Any
 
 
+@dataclass(frozen=True)
+class ErrorNote:
+    """One adapter miss, preserved for report diagnostics."""
+
+    fixture_id: str
+    kind: str
+    cluster: str
+    expected_label: str
+    predicted_label: str
+    reason: str
+    rationale: str
+
+
 @dataclass
 class ScoreResult:
     """Aggregated scores for one (eval, adapter, corpus-version, seed) run."""
@@ -21,6 +34,7 @@ class ScoreResult:
     tn: int
     fn: int
     clusters: dict[str, "ScoreResult"] = field(default_factory=dict)
+    error_notes: list[ErrorNote] = field(default_factory=list)
 
     @property
     def precision(self) -> float:
@@ -72,6 +86,8 @@ def score_predictions(
     label_by_id = {row["id"]: row for row in labels}
     prediction_pairs: list[tuple[str, str]] = []
     cluster_pairs: dict[str, list[tuple[str, str]]] = {}
+    error_notes: list[ErrorNote] = []
+    cluster_error_notes: dict[str, list[ErrorNote]] = {}
 
     for prediction in predictions:
         fixture_id = prediction["id"]
@@ -82,7 +98,27 @@ def score_predictions(
         prediction_pairs.append(pair)
         cluster = sealed_label.get("cluster", "uncategorized")
         cluster_pairs.setdefault(cluster, []).append(pair)
+        expected_positive = sealed_label["label"] in {"tp", "fn"}
+        is_false_positive = prediction["label"] == "positive" and not expected_positive
+        is_false_negative = prediction["label"] == "negative" and expected_positive
+        if is_false_positive or is_false_negative:
+            note = ErrorNote(
+                fixture_id=fixture_id,
+                kind="fp" if is_false_positive else "fn",
+                cluster=cluster,
+                expected_label=sealed_label["label"],
+                predicted_label=prediction["label"],
+                reason=prediction.get("reason", ""),
+                rationale=sealed_label.get("rationale", ""),
+            )
+            error_notes.append(note)
+            cluster_error_notes.setdefault(cluster, []).append(note)
 
     result = score(prediction_pairs)
-    result.clusters = {cluster: score(pairs) for cluster, pairs in sorted(cluster_pairs.items())}
+    result.error_notes = error_notes
+    result.clusters = {}
+    for cluster, pairs in sorted(cluster_pairs.items()):
+        cluster_score = score(pairs)
+        cluster_score.error_notes = cluster_error_notes.get(cluster, [])
+        result.clusters[cluster] = cluster_score
     return result

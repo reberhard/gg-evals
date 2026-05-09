@@ -12,7 +12,7 @@
 | fn | 6 |
 
 **Corpus:** assertion-auditor/fixtures
-**Seed:** 20260509
+**Seed:** 20260507
 
 ## Cluster Breakdown
 
@@ -29,6 +29,18 @@
 | named-workflow-redacted | 1 | 0.000 | 0.000 | 0.000 | 0 | 0 | 0 | 1 |
 | statistic-no-source | 3 | 0.000 | 0.000 | 0.000 | 0 | 0 | 0 | 3 |
 | tool-output-reporting | 3 | 0.000 | 0.000 | 0.000 | 0 | 0 | 3 | 0 |
+
+
+## Error Notes
+
+| fixture | kind | cluster | expected | predicted | adapter reason | label rationale |
+|---|---|---|---|---|---|---|
+| assertion-auditor-0013 | fn | capability-claim | tp | negative | no-trigger | External system behavior claim without verification. |
+| assertion-auditor-0009 | fn | statistic-no-source | tp | negative | no-trigger | Confident client metric claim without evidence. |
+| assertion-auditor-0003 | fn | statistic-no-source | tp | negative | no-trigger | Confident percentage without source. |
+| assertion-auditor-0017 | fn | named-workflow-redacted | tp | negative | no-trigger | Confident ownership assertion from local operations without same-turn verification. |
+| assertion-auditor-0015 | fn | market-generalization-no-source | fn | negative | no-trigger | Unsourced market generalization that a simple regex adapter may miss. |
+| assertion-auditor-0018 | fn | statistic-no-source | tp | negative | no-trigger | Confident operational statistic without attached probe output. |
 
 
 ## Notes

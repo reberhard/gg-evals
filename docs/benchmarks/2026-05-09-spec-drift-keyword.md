@@ -12,7 +12,7 @@
 | fn | 3 |
 
 **Corpus:** spec-drift/fixtures
-**Seed:** 20260509
+**Seed:** 20260507
 
 ## Cluster Breakdown
 
@@ -32,6 +32,15 @@
 | workspace-drift-redacted | 1 | 0.000 | 0.000 | 0.000 | 0 | 0 | 0 | 1 |
 | wrong-cadence | 1 | 0.000 | 0.000 | 0.000 | 0 | 0 | 0 | 1 |
 | wrong-port | 1 | 1.000 | 1.000 | 1.000 | 1 | 0 | 0 | 0 |
+
+
+## Error Notes
+
+| fixture | kind | cluster | expected | predicted | adapter reason | label rationale |
+|---|---|---|---|---|---|---|
+| spec-drift-0013 | fn | wrong-cadence | tp | negative | no-drift-signal | Current runtime cadence contradicts spec. |
+| spec-drift-0009 | fn | workspace-drift | tp | negative | no-drift-signal | Runtime workspace contradicts spec. |
+| spec-drift-0017 | fn | workspace-drift-redacted | tp | negative | no-drift-signal | Runtime workspace contradicts the registered workspace. |
 
 
 ## Notes

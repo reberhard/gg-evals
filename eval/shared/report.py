@@ -12,6 +12,10 @@ from pathlib import Path
 from typing import Any
 
 
+def _md_cell(value: str) -> str:
+    return value.replace("|", "\\|").replace("\n", " ")
+
+
 def write_report(
     eval_name: str,
     adapter: str,
@@ -38,6 +42,16 @@ def write_report(
     if not cluster_rows:
         cluster_rows = "| _none_ | 0 | 0.000 | 0.000 | 0.000 | 0 | 0 | 0 | 0 |\n"
 
+    error_rows = ""
+    for note in getattr(score_result, "error_notes", []):
+        error_rows += (
+            f"| {note.fixture_id} | {note.kind} | {note.cluster} | "
+            f"{note.expected_label} | {note.predicted_label} | "
+            f"{_md_cell(note.reason or '_none_')} | {_md_cell(note.rationale or '_none_')} |\n"
+        )
+    if not error_rows:
+        error_rows = "| _none_ | _none_ | _none_ | _none_ | _none_ | _none_ | _none_ |\n"
+
     body = f"""# {eval_name} — {adapter} — {today}
 
 | metric | value |
@@ -59,6 +73,12 @@ def write_report(
 | cluster | n | precision | recall | f1 | tp | fp | tn | fn |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|
 {cluster_rows}
+
+## Error Notes
+
+| fixture | kind | cluster | expected | predicted | adapter reason | label rationale |
+|---|---|---|---|---|---|---|
+{error_rows}
 
 ## Notes
 
