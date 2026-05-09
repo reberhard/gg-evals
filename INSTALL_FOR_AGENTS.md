@@ -2,6 +2,11 @@
 
 Idempotent setup guide for an AI agent (Claude Code, Cursor, etc.) to install and verify GuardBench from a clean checkout.
 
+GuardBench is the Codex-friendly verification lane for the GG harness. It is not
+the production agent runtime: live GG agents, Telegram RC sessions, Claude Code
+hooks, and boot-context injection remain on Claude Code unless a future
+benchmark-backed roadmap phase explicitly changes that boundary.
+
 ## Step 1 — Clone and enter
 
 ```bash
@@ -37,21 +42,30 @@ guardbench list
 
 Verify: output lists `assertion-auditor` and `spec-drift` under v0.1 scaffolded.
 
-## Step 5 — Smoke run (placeholder until Phase B)
+## Step 5 — Smoke run
 
 ```bash
-guardbench run --tier smoke
+guardbench run assertion-auditor --tier smoke
+guardbench run spec-drift --tier smoke
 ```
 
-v0.1 status: this is a stub that exits 0 and prints "Phase B work". Real smoke runs land when the assertion-auditor adapter and corpus ship.
+Verify: both commands print `precision`, `recall`, `f1`, `tp`, `fp`, `tn`, and `fn`.
 
 ## Step 6 — Tests
 
 ```bash
 pytest -q
+ruff check .
+guardbench run --tier smoke
 ```
 
-Verify: tests pass (or "no tests collected" until Phase B). Lint is clean: `ruff check .`.
+Verify: tests pass, lint is clean, and both v0.1 smoke evals print metric lines.
+
+Optional local pre-push equivalent:
+
+```bash
+scripts/pre_push.sh
+```
 
 ## Troubleshooting
 

@@ -30,7 +30,6 @@ jobs:
         run: |
           pytest -q
 
-      # Phase B: smoke-tier eval run, fail PR on precision regression.
-      # - name: Smoke eval
-      #   run: |
-      #     guardbench run --tier smoke
+      - name: Smoke eval
+        run: |
+          guardbench run --tier smoke

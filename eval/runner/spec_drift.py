@@ -15,10 +15,12 @@ archived-spec.
 
 from __future__ import annotations
 
+from eval.runner.common import run_eval
+
 ROLE = "Spec-vs-reality drift detector"
 CORPUS_DIR = "spec-drift"
 
 
-def run(tier: str, seed: int, adapter: str | None = None) -> dict:
+def run(tier: str, seed: int, adapter: str | None = None, report: bool = False) -> list[dict]:
     """Run the spec-drift eval at the given tier."""
-    raise NotImplementedError("Phase B — implement after corpus is labeled")
+    return [result.as_dict() for result in run_eval("spec-drift", tier, seed, adapter, report)]

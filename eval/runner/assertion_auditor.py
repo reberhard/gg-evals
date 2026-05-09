@@ -14,10 +14,12 @@ framework-citation. Calibration in progress.
 
 from __future__ import annotations
 
+from eval.runner.common import run_eval
+
 ROLE = "Confident-wrong claim detector"
 CORPUS_DIR = "assertion-auditor"
 
 
-def run(tier: str, seed: int, adapter: str | None = None) -> dict:
+def run(tier: str, seed: int, adapter: str | None = None, report: bool = False) -> list[dict]:
     """Run the assertion-auditor eval at the given tier."""
-    raise NotImplementedError("Phase B — implement after corpus is labeled")
+    return [result.as_dict() for result in run_eval("assertion-auditor", tier, seed, adapter, report)]

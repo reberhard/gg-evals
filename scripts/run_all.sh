@@ -13,4 +13,4 @@ fi
 # shellcheck disable=SC1091
 source .venv/bin/activate
 
-guardbench run --tier "${TIER:-dev}" --seed "${SEED:-20260507}" "$@"
+guardbench run --tier "${TIER:-dev}" --seed "${SEED:-20260509}" "$@"

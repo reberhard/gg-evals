@@ -1,4 +1,4 @@
-"""Scoring primitives — precision, recall, F1, calibration curves.
+"""Scoring primitives — precision, recall, F1, cluster breakdown.
 
 All adapters under test return a binary or scored prediction; this module
 turns those predictions plus sealed labels into the metrics that ship in
@@ -7,7 +7,8 @@ reports.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from typing import Any
 
 
 @dataclass
@@ -19,6 +20,7 @@ class ScoreResult:
     fp: int
     tn: int
     fn: int
+    clusters: dict[str, "ScoreResult"] = field(default_factory=dict)
 
     @property
     def precision(self) -> float:
@@ -34,18 +36,25 @@ class ScoreResult:
         return 2 * p * r / (p + r) if (p + r) else 0.0
 
 
+def _apply(counts: dict[str, int], predicted_label: str, true_label: str) -> None:
+    if predicted_label not in {"positive", "negative"}:
+        raise ValueError(f"invalid predicted label: {predicted_label}")
+    expected_positive = true_label in {"tp", "fn"}
+    if predicted_label == "positive" and expected_positive:
+        counts["tp"] += 1
+    elif predicted_label == "positive" and not expected_positive:
+        counts["fp"] += 1
+    elif predicted_label == "negative" and expected_positive:
+        counts["fn"] += 1
+    else:
+        counts["tn"] += 1
+
+
 def score(predictions: list[tuple[str, str]]) -> ScoreResult:
     """Score a list of (predicted_label, true_label) tuples."""
     counts = {"tp": 0, "fp": 0, "tn": 0, "fn": 0}
     for pred, truth in predictions:
-        if pred == "positive" and truth == "tp":
-            counts["tp"] += 1
-        elif pred == "positive" and truth == "fp":
-            counts["fp"] += 1
-        elif pred == "negative" and truth == "tn":
-            counts["tn"] += 1
-        elif pred == "negative" and truth == "fn":
-            counts["fn"] += 1
+        _apply(counts, pred, truth)
     return ScoreResult(
         n=len(predictions),
         tp=counts["tp"],
@@ -53,3 +62,27 @@ def score(predictions: list[tuple[str, str]]) -> ScoreResult:
         tn=counts["tn"],
         fn=counts["fn"],
     )
+
+
+def score_predictions(
+    predictions: list[dict[str, Any]],
+    labels: list[dict[str, Any]],
+) -> ScoreResult:
+    """Score adapter predictions against sealed labels, with cluster breakdown."""
+    label_by_id = {row["id"]: row for row in labels}
+    prediction_pairs: list[tuple[str, str]] = []
+    cluster_pairs: dict[str, list[tuple[str, str]]] = {}
+
+    for prediction in predictions:
+        fixture_id = prediction["id"]
+        if fixture_id not in label_by_id:
+            raise ValueError(f"prediction id not found in labels: {fixture_id}")
+        sealed_label = label_by_id[fixture_id]
+        pair = (prediction["label"], sealed_label["label"])
+        prediction_pairs.append(pair)
+        cluster = sealed_label.get("cluster", "uncategorized")
+        cluster_pairs.setdefault(cluster, []).append(pair)
+
+    result = score(prediction_pairs)
+    result.clusters = {cluster: score(pairs) for cluster, pairs in sorted(cluster_pairs.items())}
+    return result

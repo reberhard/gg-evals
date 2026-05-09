@@ -20,13 +20,23 @@ def write_report(
     seed: int,
     notes: str = "",
     root: Path | None = None,
+    report_date: date | None = None,
 ) -> Path:
     """Write a dated Markdown report. Returns the path."""
     root = root or Path(__file__).resolve().parents[2] / "docs" / "benchmarks"
     root.mkdir(parents=True, exist_ok=True)
 
-    today = date.today().isoformat()
+    today = (report_date or date.today()).isoformat()
     path = root / f"{today}-{eval_name}-{adapter}.md"
+    cluster_rows = ""
+    for cluster, cluster_score in sorted(getattr(score_result, "clusters", {}).items()):
+        cluster_rows += (
+            f"| {cluster} | {cluster_score.n} | {cluster_score.precision:.3f} | "
+            f"{cluster_score.recall:.3f} | {cluster_score.f1:.3f} | "
+            f"{cluster_score.tp} | {cluster_score.fp} | {cluster_score.tn} | {cluster_score.fn} |\n"
+        )
+    if not cluster_rows:
+        cluster_rows = "| _none_ | 0 | 0.000 | 0.000 | 0.000 | 0 | 0 | 0 | 0 |\n"
 
     body = f"""# {eval_name} — {adapter} — {today}
 
@@ -43,6 +53,12 @@ def write_report(
 
 **Corpus:** {corpus_version}
 **Seed:** {seed}
+
+## Cluster Breakdown
+
+| cluster | n | precision | recall | f1 | tp | fp | tn | fn |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+{cluster_rows}
 
 ## Notes
 
